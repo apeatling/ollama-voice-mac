@@ -1,3 +1,4 @@
+import time
 import pyttsx3
 import numpy as np
 import whisper
@@ -5,12 +6,12 @@ import pyaudio
 import sys
 import torch
 import requests
+import soundfile
 import json
 import wave
 import yaml
 import pygame, sys
 import pygame.locals
-import soundfile
 
 BACK_COLOR = (0,0,0)
 REC_COLOR = (255,0,0)
@@ -30,7 +31,6 @@ INPUT_RATE = 16000
 INPUT_CHUNK = 1024
 OLLAMA_REST_HEADERS = {'Content-Type': 'application/json',}
 INPUT_CONFIG_PATH ="assistant.yaml"
-
 class Assistant:
     def __init__(self):
         self.config = self.initConfig()
@@ -63,6 +63,7 @@ class Assistant:
         self.context = []
 
         self.text_to_speech(self.config.conversation.greeting)
+        time.sleep(0.5)
         self.display_message(self.config.messages.pressSpace)
 
     def wait_exit(self):
@@ -174,8 +175,6 @@ class Assistant:
         return np.frombuffer(b''.join(frames), np.int16).astype(np.float32) * (1 / 32768.0)
 
     def speech_to_text(self, waveform):
-        #self.text_to_speech(self.config.conversation.recognitionWaitMsg)
-
         transcript = self.model.transcribe(waveform,
                                            language = self.config.whisperRecognition.lang,
                                            fp16=torch.cuda.is_available())
@@ -186,8 +185,6 @@ class Assistant:
 
 
     def ask_ollama(self, prompt, responseCallback):
-        #self.conversation_history.append(prompt)
-        #full_prompt = "\n".join(self.conversation_history)
         full_prompt = prompt if hasattr(self, "contextSent") else (prompt)
         self.contextSent = True
         jsonParam= {"model": self.config.ollama.model,
@@ -209,7 +206,6 @@ class Assistant:
             # the response streams one token at a time, process only at end of sentences
             if token == "." or token == ":" or token == "!" or token == "?":
                 current_response = "".join(tokens)
-                #self.conversation_history.append(current_response)
                 responseCallback(current_response)
                 tokens = []
 
@@ -250,7 +246,6 @@ class Assistant:
 
 
         wf.close()
-        self.display_message(text)
 
 def main():
     pygame.init()
@@ -269,6 +264,7 @@ def main():
 
                 ass.ask_ollama(transcription, ass.text_to_speech)
 
+                time.sleep(1)
                 ass.display_message(ass.config.messages.pressSpace)
 
             if event.type == pygame.locals.QUIT:
@@ -278,3 +274,7 @@ def main():
 if __name__ == "__main__":
     main()
 
+# Supress secure code Apple warning.
+# f = open("/dev/null", "w")
+# os.dup2(f.fileno(), 2)
+# f.close()
