@@ -4,10 +4,12 @@ Mac compatible Ollama Voice building on the work of https://github.com/maudoin/o
 ## Running
 
 1. Install [Ollama](https://ollama.ai) on your Mac.
+2. Download the Mistral 7b model using the `ollama pull mistral` command.
 2. Download an [OpenAI Whisper Model](https://github.com/openai/whisper/discussions/63#discussioncomment-3798552) (base works fine).
 3. Clone this repo somewhere.
-4. Run `pip install -r requirements.txt` to install.
-5. Run `python assistant.py` to start the assistant.
+4. Place the Whisper model in a /whisper directory in the repo root folder.
+5. Run `pip install -r requirements.txt` to install.
+6. Run `python assistant.py` to start the assistant.
 
 ## Improving the voice
 
