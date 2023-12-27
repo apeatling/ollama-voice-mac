@@ -1,0 +1,12 @@
+torch
+torchvision
+torchaudio
+py3-tts
+blobfile
+openai
+Wave
+openai-whisper
+PyAudio
+PyYAML
+pygame
+soundfile

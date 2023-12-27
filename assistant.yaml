@@ -1,0 +1,15 @@
+messages:
+  pressSpace: "Press and hold space to speak"
+  loadingModel: "Loading..."
+  noAudioInput: "Error: No sound input!"
+
+whisperRecognition:
+  modelPath: "whisper/base.en.pt"
+  lang: "en"
+
+ollama:
+  url: "http://localhost:11434/api/generate"
+  model: "mistral"
+
+conversation:
+  greeting: "Hi, how can I help you?"
