@@ -1,6 +1,8 @@
 # ollama-voice-mac
 Mac compatible Ollama Voice building on the work of https://github.com/maudoin/ollama-voice
 
+<img width="839" alt="Screenshot 2023-12-27 at 3 53 03 PM" src="https://github.com/apeatling/ollama-voice-mac/assets/1464705/7c9940e6-0b0e-41d3-beea-16b13cab3d86">
+
 ## Running
 
 1. Install [Ollama](https://ollama.ai) on your Mac.
