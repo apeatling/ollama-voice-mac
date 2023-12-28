@@ -1,17 +1,17 @@
+import sys
+import json
+import wave
 import time
 import pyttsx3
-import numpy as np
-import whisper
-import pyaudio
-import sys
 import torch
 import requests
 import soundfile
-import json
-import wave
 import yaml
-import pygame, sys
+import pygame
 import pygame.locals
+import numpy as np
+import pyaudio
+import whisper
 
 BACK_COLOR = (0,0,0)
 REC_COLOR = (255,0,0)
@@ -29,12 +29,12 @@ INPUT_FORMAT = pyaudio.paInt16
 INPUT_CHANNELS = 1
 INPUT_RATE = 16000
 INPUT_CHUNK = 1024
-OLLAMA_REST_HEADERS = {'Content-Type': 'application/json',}
+OLLAMA_REST_HEADERS = {'Content-Type': 'application/json'}
 INPUT_CONFIG_PATH ="assistant.yaml"
 
 class Assistant:
     def __init__(self):
-        self.config = self.initConfig()
+        self.config = self.init_config()
 
         programIcon = pygame.image.load('assistant.png')
 
@@ -56,7 +56,7 @@ class Assistant:
                             rate=INPUT_RATE,
                             input=True,
                             frames_per_buffer=INPUT_CHUNK).close()
-        except :
+        except Exception:
             self.wait_exit()
 
         self.display_message(self.config.messages.loadingModel)
@@ -80,11 +80,11 @@ class Assistant:
         pygame.quit()
         sys.exit()
 
-    def initConfig(self):
+    def init_config(self):
         class Inst:
             pass
 
-        with open('assistant.yaml') as data:
+        with open('assistant.yaml', encoding='utf-8') as data:
             configYaml = yaml.safe_load(data)
 
         config = Inst()
@@ -189,13 +189,14 @@ class Assistant:
         full_prompt = prompt if hasattr(self, "contextSent") else (prompt)
         self.contextSent = True
         jsonParam= {"model": self.config.ollama.model,
-                                        "stream":True,
-                                        "context":self.context,
-                                        "prompt":full_prompt}
+                        "stream":True,
+                        "context":self.context,
+                        "prompt":full_prompt}
         response = requests.post(self.config.ollama.url,
-                                 json=jsonParam,
-                                 headers=OLLAMA_REST_HEADERS,
-                                 stream=True)
+                     json=jsonParam,
+                     headers=OLLAMA_REST_HEADERS,
+                     stream=True,
+                     timeout=10)  # Set the timeout value as per your requirement
         response.raise_for_status()
 
         tokens = []
@@ -253,7 +254,7 @@ def main():
 
     ass = Assistant()
 
-    push_to_talk_key = pygame.K_SPACE;
+    push_to_talk_key = pygame.K_SPACE
 
     while True:
         ass.clock.tick(60)
