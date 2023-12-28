@@ -7,7 +7,7 @@ A completely offline voice assistant using Mistral 7b via Ollama and Whisper spe
 
 1. Install [Ollama](https://ollama.ai) on your Mac.
 2. Download the Mistral 7b model using the `ollama pull mistral` command.
-3. Download an [OpenAI Whisper Model](https://github.com/openai/whisper/discussions/63#discussioncomment-3798552) (base works fine).
+3. Download an [OpenAI Whisper Model](https://github.com/openai/whisper/discussions/63#discussioncomment-3798552) (base.en works fine).
 4. Clone this repo somewhere.
 5. Place the Whisper model in a /whisper directory in the repo root folder.
 6. Make sure you have [Python](https://www.python.org/downloads/macos/) and [Pip](https://pip.pypa.io/en/stable/installation/) installed.
@@ -23,3 +23,6 @@ You can improve the quality of the voice by downloading a higher quality version
 2. Select System Voice and Manage Voices...
 3. For English find "Zoe (Premium)" and download it.
 4. Select Zoe (Premium) as your System voice.
+
+## Other languages
+You can set up support for other languages by editing `assistant.yaml`. Be sure to download a different Whisper model in your language and change the default `modelPath`.
