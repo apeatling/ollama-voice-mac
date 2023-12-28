@@ -1,7 +1,7 @@
 # ollama-voice-mac
 A completely offline voice assistant using Mistral 7b via Ollama and Whisper speech recognition models. This builds on the [excellent work of maudoin](https://github.com/maudoin/ollama-voice) by adding Mac compatibility with various improvements.
 
-<img width="839" alt="Screenshot 2023-12-27 at 3 53 03 PM" src="https://github.com/apeatling/ollama-voice-mac/assets/1464705/7c9940e6-0b0e-41d3-beea-16b13cab3d86">
+https://github.com/apeatling/ollama-voice-mac/assets/1464705/996abeb7-7e99-451b-8d3b-feb3fecbb82e
 
 ## Installing and running
 
