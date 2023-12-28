@@ -1,17 +1,19 @@
 # ollama-voice-mac
-Mac compatible Ollama Voice building on the work of https://github.com/maudoin/ollama-voice
+A completely offline voice assistant using Mistral 7b via Ollama and Whisper speech recognition models. This builds on the [excellent work of maudoin](https://github.com/maudoin/ollama-voice) by adding Mac compatibility with various improvements.
 
 <img width="839" alt="Screenshot 2023-12-27 at 3 53 03 PM" src="https://github.com/apeatling/ollama-voice-mac/assets/1464705/7c9940e6-0b0e-41d3-beea-16b13cab3d86">
 
-## Running
+## Installing and running
 
 1. Install [Ollama](https://ollama.ai) on your Mac.
 2. Download the Mistral 7b model using the `ollama pull mistral` command.
-2. Download an [OpenAI Whisper Model](https://github.com/openai/whisper/discussions/63#discussioncomment-3798552) (base works fine).
-3. Clone this repo somewhere.
-4. Place the Whisper model in a /whisper directory in the repo root folder.
-5. Run `pip install -r requirements.txt` to install.
-6. Run `python assistant.py` to start the assistant.
+3. Download an [OpenAI Whisper Model](https://github.com/openai/whisper/discussions/63#discussioncomment-3798552) (base works fine).
+4. Clone this repo somewhere.
+5. Place the Whisper model in a /whisper directory in the repo root folder.
+6. Make sure you have [Python](https://www.python.org/downloads/macos/) and [Pip](https://pip.pypa.io/en/stable/installation/) installed.
+7. For Apple silicon support of the PyAudio library you'll need to install [Homebrew](https://brew.sh) and run `brew install portaudio`.
+8. Run `pip install -r requirements.txt` to install.
+9. Run `python assistant.py` to start the assistant.
 
 ## Improving the voice
 
