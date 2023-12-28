@@ -31,6 +31,7 @@ INPUT_RATE = 16000
 INPUT_CHUNK = 1024
 OLLAMA_REST_HEADERS = {'Content-Type': 'application/json',}
 INPUT_CONFIG_PATH ="assistant.yaml"
+
 class Assistant:
     def __init__(self):
         self.config = self.initConfig()
