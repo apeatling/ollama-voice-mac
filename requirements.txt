@@ -1,12 +1,13 @@
-torch
-torchvision
-torchaudio
-py3-tts
-blobfile
-openai
-Wave
-openai-whisper
-PyAudio
-PyYAML
-pygame
-soundfile
+torch==2.1.2
+torchvision==0.16.2
+torchaudio==2.1.2
+pyttsx3==2.90
+blobfile==2.1.1
+openai==1.7.0
+Wave==0.0.2
+PyAudio==0.2.14
+PyYAML==6.0.1
+pygame==2.5.2
+soundfile==0.12.1
+pyObjC==9.0.1
+openai-whisper @ git+https://github.com/openai/whisper.git@ba3f3cd54b0e5b8ce1ab3de13e32122d0d5f98ab
