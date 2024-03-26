@@ -12,6 +12,12 @@ import pygame.locals
 import numpy as np
 import pyaudio
 import whisper
+import logging
+import threading
+import queue
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 BACK_COLOR = (0,0,0)
 REC_COLOR = (255,0,0)
@@ -34,6 +40,7 @@ INPUT_CONFIG_PATH ="assistant.yaml"
 
 class Assistant:
     def __init__(self):
+        logging.info("Initializing Assistant")
         self.config = self.init_config()
 
         programIcon = pygame.image.load('assistant.png')
@@ -56,7 +63,8 @@ class Assistant:
                             rate=INPUT_RATE,
                             input=True,
                             frames_per_buffer=INPUT_CHUNK).close()
-        except Exception:
+        except Exception as e:
+            logging.error(f"Error opening audio stream: {str(e)}")
             self.wait_exit()
 
         self.display_message(self.config.messages.loadingModel)
@@ -76,11 +84,13 @@ class Assistant:
                     self.shutdown()
 
     def shutdown(self):
+        logging.info("Shutting down Assistant")
         self.audio.terminate()
         pygame.quit()
         sys.exit()
 
     def init_config(self):
+        logging.info("Initializing configuration")
         class Inst:
             pass
 
@@ -107,11 +117,13 @@ class Assistant:
         return config
 
     def display_rec_start(self):
+        logging.info("Displaying recording start")
         self.windowSurface.fill(BACK_COLOR)
         pygame.draw.circle(self.windowSurface, REC_COLOR, (WIDTH/2, HEIGHT/2), REC_SIZE)
         pygame.display.flip()
 
     def display_sound_energy(self, energy):
+        logging.info(f"Displaying sound energy: {energy}")
         COL_COUNT = 5
         RED_CENTER = 100
         FACTOR = 10
@@ -137,6 +149,7 @@ class Assistant:
         pygame.display.flip()
 
     def display_message(self, text):
+        logging.info(f"Displaying message: {text}")
         self.windowSurface.fill(BACK_COLOR)
 
         label = self.font.render(text
@@ -151,7 +164,7 @@ class Assistant:
         pygame.display.flip()
 
     def waveform_from_mic(self, key = pygame.K_SPACE) -> np.ndarray:
-
+        logging.info("Capturing waveform from microphone")
         self.display_rec_start()
 
         stream = self.audio.open(format=INPUT_FORMAT,
@@ -176,107 +189,129 @@ class Assistant:
         return np.frombuffer(b''.join(frames), np.int16).astype(np.float32) * (1 / 32768.0)
 
     def speech_to_text(self, waveform):
-        transcript = self.model.transcribe(waveform,
-                                           language = self.config.whisperRecognition.lang,
-                                           fp16=torch.cuda.is_available())
-        text = transcript["text"]
+        logging.info("Converting speech to text")
+        result_queue = queue.Queue()
 
-        print('\nMe:\n', text.strip())
-        return text
+        def transcribe_speech():
+            try:
+                logging.info("Starting transcription")
+                transcript = self.model.transcribe(waveform,
+                                                language=self.config.whisperRecognition.lang,
+                                                fp16=torch.cuda.is_available())
+                logging.info("Transcription completed")
+                text = transcript["text"]
+                print('\nMe:\n', text.strip())
+                result_queue.put(text)
+            except Exception as e:
+                logging.error(f"An error occurred during transcription: {str(e)}")
+                result_queue.put("")
+
+        transcription_thread = threading.Thread(target=transcribe_speech)
+        transcription_thread.start()
+        transcription_thread.join()
+
+        return result_queue.get()
 
 
     def ask_ollama(self, prompt, responseCallback):
+        logging.info(f"Asking OLLaMa with prompt: {prompt}")
         full_prompt = prompt if hasattr(self, "contextSent") else (prompt)
         self.contextSent = True
-        jsonParam= {"model": self.config.ollama.model,
-                        "stream":True,
-                        "context":self.context,
-                        "prompt":full_prompt}
-        response = requests.post(self.config.ollama.url,
-                     json=jsonParam,
-                     headers=OLLAMA_REST_HEADERS,
-                     stream=True,
-                     timeout=10)  # Set the timeout value as per your requirement
-        response.raise_for_status()
+        jsonParam = {
+            "model": self.config.ollama.model,
+            "stream": True,
+            "context": self.context,
+            "prompt": full_prompt
+        }
+        
+        try:
+            response = requests.post(self.config.ollama.url,
+                                    json=jsonParam,
+                                    headers=OLLAMA_REST_HEADERS,
+                                    stream=True,
+                                    timeout=30)  # Increase the timeout value
+            response.raise_for_status()
 
-        tokens = []
-        for line in response.iter_lines():
-            body = json.loads(line)
-            token = body.get('response', '')
-            tokens.append(token)
+            full_response = ""
+            for line in response.iter_lines():
+                body = json.loads(line)
+                token = body.get('response', '')
+                full_response += token
 
-            # the response streams one token at a time, process only at end of sentences
-            if token == "." or token == ":" or token == "!" or token == "?":
-                current_response = "".join(tokens)
-                responseCallback(current_response)
-                tokens = []
+                if 'error' in body:
+                    logging.error(f"Error from OLLaMa: {body['error']}")
+                    responseCallback("Error: " + body['error'])
+                    return
 
-            if 'error' in body:
-                responseCallback("Error: " + body['error'])
+                if body.get('done', False) and 'context' in body:
+                    self.context = body['context']
+                    break
 
-            if body.get('done', False) and 'context' in body:
-                self.context = body['context']
+            responseCallback(full_response.strip())
+
+        except requests.exceptions.ReadTimeout as e:
+            logging.error(f"ReadTimeout occurred while asking OLLaMa: {str(e)}")
+            responseCallback("Sorry, the request timed out. Please try again.")
+        except requests.exceptions.RequestException as e:
+            logging.error(f"An error occurred while asking OLLaMa: {str(e)}")
+            responseCallback("Sorry, an error occurred. Please try again.")
+
 
     def text_to_speech(self, text):
+        logging.info(f"Converting text to speech: {text}")
         print('\nAI:\n', text.strip())
 
-        tempPath = './temp.wav'
-        self.tts.save_to_file(text , tempPath)
-        self.tts.runAndWait()
+        def play_speech():
+            try:
+                logging.info("Initializing TTS engine")
+                engine = pyttsx3.init()
+                
+                # Adjust the speech rate (optional)
+                rate = engine.getProperty('rate')
+                engine.setProperty('rate', rate - 50)  # Decrease the rate by 50 units
+                
+                # Add a short delay before converting text to speech
+                time.sleep(0.5)  # Adjust the delay as needed
+                
+                logging.info("Converting text to speech")
+                engine.say(text)
+                engine.runAndWait()
+                logging.info("Speech playback completed")
+            except Exception as e:
+                logging.error(f"An error occurred during speech playback: {str(e)}")
 
-        # Fix 64bit RIFF id for Apple Silicon
-        data, samplerate = soundfile.read(tempPath)
-        soundfile.write(tempPath, data, samplerate)
+        speech_thread = threading.Thread(target=play_speech)
+        speech_thread.start()
 
-        wf = wave.open(tempPath, 'rb')
-
-        stream = self.audio.open(format =
-                        self.audio.get_format_from_width(wf.getsampwidth()),
-                        channels = wf.getnchannels(),
-                        rate = wf.getframerate(),
-                        output = True)
-
-
-        chunkSize = 1024
-        chunk = wf.readframes(chunkSize)
-        while chunk:
-            stream.write(chunk)
-            tmp = np.array(np.frombuffer(chunk, np.int16), np.float32) * (1 / 32768.0)
-            energy_of_chunk = np.sqrt(np.mean(tmp**2))
-            self.display_sound_energy(energy_of_chunk)
-            chunk = wf.readframes(chunkSize)
-
-
-        wf.close()
 
 def main():
+    logging.info("Starting Assistant")
     pygame.init()
 
     ass = Assistant()
 
     push_to_talk_key = pygame.K_SPACE
+    quit_key = pygame.K_ESCAPE
 
     while True:
         ass.clock.tick(60)
         for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN and event.key == push_to_talk_key:
-                speech = ass.waveform_from_mic(push_to_talk_key)
+            if event.type == pygame.KEYDOWN:
+                if event.key == push_to_talk_key:
+                    logging.info("Push-to-talk key pressed")
+                    speech = ass.waveform_from_mic(push_to_talk_key)
 
-                transcription = ass.speech_to_text(waveform=speech)
+                    transcription = ass.speech_to_text(waveform=speech)
 
-                ass.ask_ollama(transcription, ass.text_to_speech)
+                    ass.ask_ollama(transcription, ass.text_to_speech)
 
-                time.sleep(1)
-                ass.display_message(ass.config.messages.pressSpace)
+                    time.sleep(1)
+                    ass.display_message(ass.config.messages.pressSpace)
 
-            if event.type == pygame.locals.QUIT:
-                ass.shutdown()
+                elif event.key == quit_key:
+                    logging.info("Quit key pressed")
+                    ass.shutdown()
 
 
 if __name__ == "__main__":
     main()
-
-# Supress secure code Apple warning.
-# f = open("/dev/null", "w")
-# os.dup2(f.fileno(), 2)
-# f.close()
