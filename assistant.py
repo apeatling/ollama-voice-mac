@@ -54,7 +54,14 @@ class Assistant:
 
         self.audio = pyaudio.PyAudio()
 
-        self.tts = pyttsx3.init("nsss");
+        # Initialize TTS engine based on the operating system
+        if platform.system() == "Darwin":  # macOS
+            self.tts = pyttsx3.init("nsss")
+        elif platform.system() == "Windows": # Windows
+            self.tts = pyttsx3.init("sapi5")
+        else:
+            self.tts = pyttsx3.init() # Default to the system's default TTS engine
+            
         self.tts.setProperty('rate', self.tts.getProperty('rate') - 20)
 
         try:
