@@ -19,10 +19,12 @@ https://github.com/apeatling/ollama-voice-mac/assets/1464705/996abeb7-7e99-451b-
 
 You can improve the quality of the voice by downloading a higher quality version. These instructions work on MacOS 14 Sonoma:
 
-1. In System Settings select Accessibility > Spoken Content
+1. In System Settings select Accessibility > Spoken Content (or in newer versions of MacOS, Accessibility > Read & Speak)
 2. Select System Voice and Manage Voices...
 3. For English find "Zoe (Premium)" and download it.
 4. Select Zoe (Premium) as your System voice.
+
+In newer versions of MacOS, you may need to search for `Voice (Spoken Content)` and select the `ⓘ` next to the dropdown to be able to download additional voices.
 
 ## Other languages
 You can set up support for other languages by editing `assistant.yaml`. Be sure to download a different Whisper model in your language and change the default `modelPath`.
